@@ -6,17 +6,19 @@ activity <- read_csv("C:/Users/anton/Downloads/repdata_data_activity/activity.cs
 # Histogram
 hist(steps_by_day$total, main="Histogram of total number of steps per day", 
      xlab="Total number of steps in a day")
+https://github.com/antomagu/reproducibleresearch/blob/main/Grafico1.png
      
 ## Media y mediana del número de pasos dados cada día
 mean 10766.19
 median 10766.19
 
 ## Gráfico de series temporales del número medio de pasos dados
+https://github.com/antomagu/reproducibleresearch/blob/main/Grafico2.png
 plot(steps_by_interval$interval, steps_by_interval$steps, type='l', 
      main="Average number of steps over all days", xlab="Interval", 
      ylab="Average number of steps")
-     
 
+     
 ## El intervalo de 5 minutos que, por término medio, contiene el número máximo de pasos
 interval    steps
 104      835 206.1698
@@ -36,14 +38,12 @@ for (i in 1:nrow(data_imputed)) {
 
 
 ##Histograma del número total de pasos dados cada día después de imputar los valores que faltan
+https://github.com/antomagu/reproducibleresearch/blob/main/Grafico3.png
 hist(df_imputed_steps_by_day$steps, main="Histogram of total number of steps per day imputed", 
      xlab="Total number of steps in a day")
-     
 
-
-
-
-
+## Gráfico de panel que compara el número medio de pasos dados por intervalo de 5 minutos entre los días laborables y los fines de semana
+     https://github.com/antomagu/reproducibleresearch/blob/main/file_show.pdf
 
 ## Todo el codigo
 library(knitr)
