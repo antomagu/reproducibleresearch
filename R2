@@ -1,0 +1,120 @@
+
+#Load the data
+
+repdata_data_StormData1 <- read_csv("Reproducible Research/week2/repdata_data_StormData1.csv")
+
+##  "Procesamiento de datos" que describa cómo se cargaron los datos en R y se procesaron para el análisis
+Se cargo la base de datos en r mediante la importacion de la data en el enviaronment de R que proporciona coursera para hacer la acividad y se procesaron para el analisis
+
+#Analsis de Datos meterologicos 
+
+#Transform the data
+
+## análisis la descripción 
+
+data <- repdata_data_StormData1
+data$BGN_DATE <- strptime(data$BGN_DATE, "%m/%d/%Y %H:%M:%S")
+data <- subset(data, BGN_DATE > "1995-12-31")
+
+data <- subset(data, select = c(EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP))
+> data$EVTYPE <- toupper(data$EVTYPE)
+
+# eliminating zero data
+> data <- data[data$FATALITIES !=0 | 
++                          data$INJURIES !=0 | 
++                          data$PROPDMG !=0 | 
++                          data$CROPDMG !=0, ]
+> 
+#transforming letters and symbols to numbers
+> 
+> data$PROPDMGEXP <- gsub("[Hh]", "2", data$PROPDMGEXP)
+> data$PROPDMGEXP <- gsub("[Kk]", "3", data$PROPDMGEXP)
+> data$PROPDMGEXP <- gsub("[Mm]", "6", data$PROPDMGEXP)
+> data$PROPDMGEXP <- gsub("[Bb]", "9", data$PROPDMGEXP)
+> data$PROPDMGEXP <- gsub("\\+", "1", data$PROPDMGEXP)
+> data$PROPDMGEXP <- gsub("\\?|\\-|\\ ", "0",  data$PROPDMGEXP)
+> data$PROPDMGEXP <- as.numeric(data$PROPDMGEXP)
+> 
+> data$CROPDMGEXP <- gsub("[Hh]", "2", data$CROPDMGEXP)
+> data$CROPDMGEXP <- gsub("[Kk]", "3", data$CROPDMGEXP)
+> data$CROPDMGEXP <- gsub("[Mm]", "6", data$CROPDMGEXP)
+> data$CROPDMGEXP <- gsub("[Bb]", "9", data$CROPDMGEXP)
+> data$CROPDMGEXP <- gsub("\\+", "1", data$CROPDMGEXP)
+> data$CROPDMGEXP <- gsub("\\-|\\?|\\ ", "0", data$CROPDMGEXP)
+> data$CROPDMGEXP <- as.numeric(data$CROPDMGEXP)
+
+ data$PROPDMGEXP[is.na(data$PROPDMGEXP)] <- 0
+>data$CROPDMGEXP[is.na(data$CROPDMGEXP)] <- 0
+
+#creating total damage values
+library(dplyr)
+data <- mutate(data, 
++                     PROPDMGTOTAL = PROPDMG * (10 ^ PROPDMGEXP), 
++                     CROPDMGTOTAL = CROPDMG * (10 ^ CROPDMGEXP))
+
+#analyzing
+> Economic_data <- aggregate(cbind(PROPDMGTOTAL, CROPDMGTOTAL) ~ EVTYPE, data = data, FUN=sum)
+> Economic_data$ECONOMIC_LOSS <- Economic_data$PROPDMGTOTAL + Economic_data$CROPDMGTOTAL
+> Economic_data <- Economic_data[order(Economic_data$ECONOMIC_LOSS, decreasing = TRUE), ]
+> Top10_events_economy <- Economic_data[1:10,]
+> print(Top10_events_economy)
+ EVTYPE PROPDMGTOTAL CROPDMGTOTAL ECONOMIC_LOSS
+74              FLOOD 144657709807    168037.88  144657877845
+200 HURRICANE/TYPHOON  69305840000      4798.48   69305844798
+368           TORNADO  56947381216    100018.52   56947481235
+314       STORM SURGE  43323536000         5.00   43323536005
+61        FLASH FLOOD  16822723978    179200.46   16822903179
+112              HAIL  15735267513    579596.28   15735847109
+191         HURRICANE  11868319010      5339.31   11868324349
+378    TROPICAL STORM   7703890550      5899.12    7703896449
+438      WINTER STORM   6688497251      1978.99    6688499230
+176         HIGH WIND   5270046475     17283.21    5270063758
+> 
+
+
+> 
+> Health_data <- aggregate(cbind(FATALITIES, INJURIES) ~ EVTYPE, data = data, FUN=sum)
+> Health_data$PEOPLE_LOSS <- Health_data$FATALITIES + Health_data$INJURIES
+> Health_data <- Health_data[order(Health_data$PEOPLE_LOSS, decreasing = TRUE), ]
+> Top10_events_people <- Health_data[1:10,]
+> print(Top10_events_people)
+               EVTYPE FATALITIES INJURIES PEOPLE_LOSS
+368           TORNADO       5633    91346       96979
+50     EXCESSIVE HEAT       1903     6525        8428
+383         TSTM WIND        504     6957        7461
+74              FLOOD        470     6789        7259
+230         LIGHTNING        816     5230        6046
+129              HEAT        937     2100        3037
+61        FLASH FLOOD        978     1777        2755
+213         ICE STORM         89     1975        2064
+326 THUNDERSTORM WIND        133     1488        1621
+438      WINTER STORM        206     1321        1527
+
+## gráficos
+plotting health loss
+library(ggplot2)
+ g <- ggplot(data = Top10_events_people, aes(x = reorder(EVTYPE, PEOPLE_LOSS), y = PEOPLE_LOSS))
+> g <- g + geom_bar(stat = "identity", colour = "black")
+> g <- g + labs(title = "Total people loss in USA by weather events in 1996-2011")
+> g <- g + theme(plot.title = element_text(hjust = 0.5))
+> g <- g + labs(y = "Number of fatalities and injuries", x = "Event Type")
+> g <- g + coord_flip()
+> print(g)
+
+#plotting economic loss
+> g <- ggplot(data = Top10_events_economy, aes(x = reorder(EVTYPE, ECONOMIC_LOSS), y = ECONOMIC_LOSS))
+> g <- g + geom_bar(stat = "identity", colour = "black")
+> g <- g + labs(title = "Total economic loss in USA by weather events in 1996-2011")
+> g <- g + theme(plot.title = element_text(hjust = 0.5))
+> g <- g + labs(y = "Size of property and crop loss", x = "Event Type")
+> g <- g + coord_flip()
+> print(g)
+
+# Resultados
+
+Tipos de eventos son mas perjudiciales para la salud de la poblacion
+Tornado
+
+Los sucesos que tienen mas consecuencias economicas 
+Flood
+
